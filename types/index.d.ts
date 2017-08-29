@@ -49,8 +49,8 @@ export class app {
    */
   dictionary: any;
 
-  intents: {[name: string]: alexa.Intent};
-  intent: (intentName: string, schema: IntentSchema, handler: RequestHandler) => void;
+  intents: {[name: string]: intent};
+  intent: (intentName: string, schema: IntentSchema | RequestHandler, handler?: RequestHandler) => void;
 
   customSlots: {[name: string]: CustomSlot};
   customSlot: (name: string, values: Array<CustomSlot|string>) => void;
@@ -65,7 +65,7 @@ export class app {
   sessionEndedFunc?: RequestHandler;
   sessionEnded: (func: RequestHandler) => void;
 
-  request: (requestJSON: alexa.Request) => void;
+  request: (requestJSON: alexa.Request) => Promise<any>; // TODO: Figure out what the promise actually contains
 
   /** @deprecated It's recommended you directly call `app.schema.*` instead
    * Extracts the schema and generates a schema JSON object
@@ -108,6 +108,8 @@ export class app {
 }
 
 export class request {
+  constructor(json: alexa.RequestBody)
+
   /** Returns the type of request received (LaunchRequest, IntentRequest, or SessionEndedRequest) */
   type: () => "LaunchRequest"|"IntentRequest"|"SessionEndedRequest";
 
@@ -130,13 +132,13 @@ export class request {
   hasSession: () => boolean;
 
   /** Returns the session object */
-  getSession: () => alexa.Session;
+  getSession: () => session;
 
   /** Returns the request context */
   context?: alexa.Context;
 
   /** The raw request JSON object from Amazon */
-  data: alexa.Request;
+  data: alexa.RequestBody;
 
   isAudioPlayer: () => boolean;
 
@@ -144,6 +146,9 @@ export class request {
 
   userId?: string;
   applicationId?: string;
+
+  /** @deprecated */
+  session: (key: string) => any;
 }
 
 export class response {
@@ -216,6 +221,12 @@ export class response {
 
   getDirectives: () => directive[];
   directive: (directive: any) => response;
+
+  /** @deprecated */
+  session: (key: string, val?: any) => response;
+
+  /** @deprecated */
+  clearSession: (key?: string) => response;
 }
 
 // TODO: This is an Amazon-provided interface, but is more of a cluster of a half-dozen different interfaces with no documented parent interface. These are the methods/properties we're actually using.
@@ -252,7 +263,7 @@ export class session {
   attributes: any;
   sessionId?: string;
 
-  clear: (key: string) => boolean;
+  clear: (key?: string) => boolean;
 
   getAttributes: () => any;
 }
@@ -282,6 +293,16 @@ export class dialog {
   handleDialogDelegation: (func: RequestHandler) => void;
 }
 
+export class intent {
+  name?: string;
+  handler?: RequestHandler;
+  dialog: dialog | any;
+  slots: object | null;
+  utterances: string[];
+
+  isDelegatedDialog: () => boolean;
+}
+
 export interface ExpressOptions {
   /** The express instance to attach to */
   expressApp: any;
@@ -307,7 +328,7 @@ export interface ExpressOptions {
 
 export interface IntentSchema {
   dialog?: object;
-  slots?: any;
+  slots?: object;
   utterances?: string[];
 }
 

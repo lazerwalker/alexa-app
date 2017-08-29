@@ -6,6 +6,9 @@
         "noImplicitThis": true,
         "strictNullChecks": true,
         "baseUrl": "..",
-        "paths": { "alexa-app": ["."] }
-    }
+        "paths": { "alexa-app": [".."] }
+    },
+    "include": [
+        "test_alexa_app_session.js"
+    ]
 }
